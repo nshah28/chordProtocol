@@ -4,18 +4,15 @@ import java.io.Serializable;
 
 /**
  * @author Team-6
- * @description This Class contains finger table information which would be used for searching the data key and node 
- * consistent for all nodes.
+ * @description This class contains a anti-finger table which has been used for bidirectional lookup chord. 
  */
-
-
-public class Finger implements Serializable{
+public class AntiFinger implements Serializable{
 	private int key;
 	private int span;
 	private int successorNode;
 	private String ip;
 	private int port;
-	Finger(int gap,int span,int successorNode, String ip, int port) {
+	AntiFinger(int gap,int span,int successorNode, String ip, int port) {
 		
 		this.key = gap;
 		this.span = span;

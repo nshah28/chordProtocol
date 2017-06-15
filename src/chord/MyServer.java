@@ -1,42 +1,57 @@
 package chord;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
 public class MyServer extends Thread{
-	
+
 	int portNumber;
 	int hostKey;
 	String ipAddr;
 	ServerSocket serverSocket;
-	
-	public MyServer(ServerSocket serverSocket,int hostKey,String ipAddr,int portNumber,List<Finger> fingerTable){
-        //it will have finger table, successor, predecessor as arguments
-        this.serverSocket = serverSocket;
-        this.portNumber = portNumber;
-        this.hostKey = hostKey;
-        this.ipAddr = ipAddr;
-    }
-	
+	Node node;
+	Finger finger;
+	Node successorNode;
+	Node predecessorNode;
+	List<Finger> fingerTable;
+	int totalNodes;
+	int M;
+	List<String> dataList;
+	List<AntiFinger> antiFingerTable;
+	LRUCache cache;
+
+	public MyServer(ServerSocket serverSocket,int hostKey,String ipAddr,int portNumber,List<Finger> fingerTable,Node node,Finger finger,Node successorNode,Node predecessorNode,int M,List<String> dataList,List<AntiFinger> antiFingerTable, LRUCache cache){
+		//it will have finger table, successor, predecessor as arguments
+		this.serverSocket = serverSocket;
+		this.portNumber = portNumber;
+		this.hostKey = hostKey;
+		this.ipAddr = ipAddr;
+		this.node = node;
+		this.finger = finger;
+		this.predecessorNode = predecessorNode;
+		this.successorNode = successorNode;
+		this.fingerTable = fingerTable;
+		this.M = M;
+		totalNodes =  (int) Math.pow(2, M);
+		this.dataList=dataList;
+		this.antiFingerTable=antiFingerTable;
+		this.cache = cache;
+	} 
+
 	public void run(){
 		Socket s=null;
 		ServerSocket ss=null;
-		
-		try{
-			//ss = new ServerSocket(portNumber);
 
+		try{
 			while(true){
 				s= serverSocket.accept();
-				
-				ServerThread st=new ServerThread(s,portNumber,hostKey,ipAddr);
+				ServerThread st=new ServerThread(s,portNumber,hostKey,ipAddr,node,finger,successorNode,predecessorNode,fingerTable,M,dataList,antiFingerTable,cache);
 				st.start();
 			}
-
 		}
 		catch(IOException e){
 			e.printStackTrace();
@@ -44,47 +59,14 @@ public class MyServer extends Thread{
 
 		}finally{
 			try {
-				ss.close();
+				if (ss != null) {
+					ss.close();
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 	}
+
 }
 
-class ServerThread extends Thread{ 
-	int portNumber;
-	int hostKey;
-	String ipAddr;
-	Socket s=null;
-	public ServerThread(Socket s,int portNumber,int hostKey,String ipAddr){
-		this.s = s;
-		this.portNumber = portNumber;
-		this.hostKey = hostKey;
-		this.ipAddr = ipAddr;
-	}
-
-	public void run() {
-		//process request
-		String line;
-        BufferedReader in = null;
-        PrintWriter out = null;
-        try {
-            in = new BufferedReader(new InputStreamReader(s.getInputStream())); //wait for Input message
-            out = new PrintWriter(s.getOutputStream(), true);
-
-        } catch (IOException e) {
-            System.out.println("in or out failed");
-            throw new RuntimeException();
-        }
-
-        try {
-            String inputString = in.readLine();
-            System.out.println("Request received " + inputString);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
-        }
-	}
-}
